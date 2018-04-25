@@ -1,0 +1,47 @@
+service: aws-python3 # NOTE: update this with your service name
+
+
+provider:
+  name: aws
+  runtime: python3.6
+  region: eu-west-1
+
+  environment:
+    BOT_NAME: TodaysWeather
+    BOT_ALIAS: alpha
+
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - lex:*
+      Resource:
+        - "arn:aws:lex:*:*:bot:TodaysWeather:alpha"
+    - Effect: "Allow"
+      Action:
+        - lambda:InvokeFunction
+        - lambda:InvokeAsync
+        - lex:*
+      Resource: "*"
+
+functions:
+  get_weather:
+    handler: handler.get_weather
+    events:
+      - http: GET get_weather
+
+  lex_handler:
+    handler: handler.lex_handler
+    events:
+      - http: GET lex_handler
+
+plugins:
+    - serverless-python-requirements
+
+custom:
+    pythonRequirements:
+        dockerizePip: non-linux
+
+package:
+    exclude:
+        - node_modules/**
+        - venv/**
