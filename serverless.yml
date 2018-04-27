@@ -9,6 +9,7 @@ provider:
   environment:
     BOT_NAME: TodaysWeather
     BOT_ALIAS: alpha
+    TEST_ENDPOINT: http://17d34f74.ngrok.io
 
   iamRoleStatements:
     - Effect: "Allow"
@@ -33,6 +34,11 @@ functions:
     handler: handler.lex_handler
     events:
       - http: GET lex_handler
+
+  test_endopoint:
+    handler: handler.general_proxy_handler
+    events:
+      - http: GET test_endpoint  
 
 plugins:
     - serverless-python-requirements

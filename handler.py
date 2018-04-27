@@ -2,6 +2,7 @@ import boto3
 import json
 import logging
 import os
+import urllib
 import weather
 
 bot_name = os.environ.get('BOT_NAME')
@@ -73,7 +74,7 @@ def get_weather(event, context):
     slot_values = populate_slots(event)
     location = slot_values.get('location')
     if location:
-        wl = weather.Weather().lookup_by_location(location)
+        wl = weather.Weather().lookup_by_=-location(location)
         if not wl:
             return aws_lex_return_close('Location {} not found'.format(location), 'Failed')
         output = (
@@ -90,3 +91,21 @@ def get_weather(event, context):
         return aws_lex_return_close(output)
 
     return aws_lex_return_close('Location {location} not found'.format(location=location), 'Failed')
+
+
+def general_proxy_handler(event, context):
+    """This will proxy all requests to the TEST_ENDPOINT."""
+    outside_http = os.environ.get('TEST_ENDPOINT')
+
+    logger.info('general_setup event={} url={}'.format(event, outside_http))
+
+    params = json.dumps(event).encode('utf8')
+    logger.info('params={}'.format(params))
+
+    req = urllib.request.Request(outside_http, data=params, headers={'content-type': 'application/json'})
+    response = urllib.request.urlopen(req)
+
+    response_json = json.loads(response.read())
+    logger.info('general_setup response={}'.format(response_json))
+
+    return response_json
