@@ -11,7 +11,12 @@ bot_alias = os.environ.get('BOT_ALIAS')
 logger = logging.getLogger()
 logger.setLevel(logging.ERROR)
 
-def aws_lex_return_close(message_content, return_type='Fulfilled', session=None):
+def aws_lex_return_close(message_content, return_type=None, session=None):
+    valid_return_types = ('Fulfilled', 'Failed')
+    if return_type is None:
+        return_type = 'Fulfilled'
+    if return_type not in valid_return_types:
+        raise ValueError('Wrong return_type, got {}, expected {}'.format(return_type, ''.join(valid_return_types)))
     out = {
         'dialogAction': {
             'type': 'Close',
@@ -35,7 +40,6 @@ def populate_slots(event):
     Returns:
         The dictionary with the key being the slot name and the value derived by Lex.
     """
-
     slot_values = {}
     for slot_name, v in event['currentIntent']['slots'].items():
         slot_values[slot_name] = v
@@ -44,7 +48,6 @@ def populate_slots(event):
     for slot_name, v in event['currentIntent']['slotDetails'].items():
         if v is not None and len(v['resolutions']) > 0 and not slot_values.get(slot_name):
             slot_values[slot_name] = v['resolutions'][0]['value']
-
     return slot_values
 
 
@@ -71,10 +74,11 @@ def lex_handler(event, context):
 
 
 def get_weather(event, context):
+    """Returns the weather for given location."""
     slot_values = populate_slots(event)
     location = slot_values.get('location')
     if location:
-        wl = weather.Weather().lookup_by_=-location(location)
+        wl = weather.Weather().lookup_by_location(location)
         if not wl:
             return aws_lex_return_close('Location {} not found'.format(location), 'Failed')
         output = (
